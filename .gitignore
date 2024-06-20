@@ -1,0 +1,9 @@
+﻿*.o
+*.su
+*.bin
+*.list
+*.map
+*.elf
+*.exe
+.settings/
+.vscode/
