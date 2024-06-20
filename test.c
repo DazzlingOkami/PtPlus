@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pt_plus.h"
 
+#if defined(TEST) && (TEST == 1)
 struct pt_sem sem;
 
 PT_THREAD(test_task_A(struct pt *pt)){
@@ -33,3 +34,4 @@ int main(void){
     }
     return 0;
 }
+#endif

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -Wall -lm
+CFLAGS= -Wall -lm -DTEST=1
 
 ifeq ($(OS),Windows_NT)
 # Windows
