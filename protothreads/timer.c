@@ -123,5 +123,25 @@ timer_expired(struct timer *t)
   return (clock_time_t)(clock_time() - t->start) >= (clock_time_t)t->interval;
 }
 /*---------------------------------------------------------------------------*/
-
+/**
+ * Get the remaining time of the timer.
+ * 
+ * This function returns the time left before the timer expires. The
+ * return value is in ticks.
+ * 
+ * \param t A pointer to the timer.
+ * 
+ * \return The time left before the timer expires.
+ */
+clock_time_t
+timer_remaining(struct timer *t)
+{
+  clock_time_t tick = t->start + t->interval - clock_time();
+  if(timer_expired(t))
+  {
+    return 0;
+  }
+  return tick;
+}
+/*---------------------------------------------------------------------------*/
 /** @} */

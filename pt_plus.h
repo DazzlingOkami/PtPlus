@@ -67,18 +67,32 @@ extern struct list_node pt_pool;
  * }
  * @endcode
  */
-#define PT_TASK_SCHEDULE()                                           \
-    do                                                          \
-    {                                                           \
-        pt_item_t *pt_item;                                     \
-        list_for_each_entry(&pt_pool, pt_item, pt_item_t, list) \
-        {                                                       \
-            if (pt_item->task(&(pt_item->pt)) >= PT_EXITED)     \
-            {                                                   \
-                list_delete(&(pt_item->list)); break;           \
-            }                                                   \
-        }                                                       \
-    } while (0)
+#define PT_TASK_SCHEDULE() pt_task_schedule();
+void pt_task_schedule(void);
+
+#if defined(PT_PLUS_DELAY_SUPPORT) && (PT_PLUS_DELAY_SUPPORT == 1)
+/**
+ * Query the next scheduled time.
+ * Used to enable devices to run in low-power mode.
+ * 
+ * Example usage:
+ * @code{c}
+ *  int main(void){
+ *      //...
+ *      while(1){
+ *          PT_TASK_SCHEDULE();
+ *          clock_time_t idle_time = PT_TASK_IDLE_TIME();
+ *          if(idle_time > 0){
+ *              // Calling system delay functions
+ *              sleep(idle_time);
+ *          }
+ *      }
+ *  }
+ * @endcode
+ */
+#define PT_TASK_IDLE_TIME() pt_task_idle_time()
+clock_time_t pt_task_idle_time(void);
+#endif
 
 /** 
  * Create a new pt task.
