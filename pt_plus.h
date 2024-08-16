@@ -157,11 +157,12 @@ clock_time_t pt_task_idle_time(void);
  * }
  * @endcode
  */
-#define PT_TASK_DELAY(pt_p, ms)                                                          \
-    do                                                                                   \
-    {                                                                                    \
-        timer_set(&(containerof(pt_p, pt_item_t, pt)->periodic), ms);                    \
-        PT_WAIT_UNTIL(pt, timer_expired(&(containerof(pt_p, pt_item_t, pt)->periodic))); \
+#define PT_TASK_DELAY(pt_p, ms)                                            \
+    do                                                                     \
+    {                                                                      \
+        timer_set(&(containerof(pt_p, pt_item_t, pt)->periodic), ms);      \
+        PT_WAIT_UNTIL(pt,                                                  \
+            timer_expired(&(containerof(pt_p, pt_item_t, pt)->periodic))); \
     } while (0)
 #endif
 
@@ -189,7 +190,7 @@ clock_time_t pt_task_idle_time(void);
     PT_THREAD(name(struct pt *pt)){PT_BEGIN(pt);PT_YIELD(pt);body;PT_END(pt);}
 
 /** 
- * Asynchronous execution. Only used in threads, similar to PT_TASK_DELAY() function.
+ * Asynchronous execution. Only used in coroutine function.
  * 
  * Example usage:
  * @code{c}
@@ -237,4 +238,76 @@ clock_time_t pt_task_idle_time(void);
         pt_anchor = 1;                             \
     } while (0)
 
+#endif
+
+#define PT_SEM_SIGNAL_FROM_ISR(s) ++(s)->count
+
+#if defined(PT_PLUS_DELAY_SUPPORT) && (PT_PLUS_DELAY_SUPPORT == 1)
+
+/**
+ * Wait for a semaphore within the specified timeout period.
+ * 
+ * Compared to PT-SEM-WAIT(), it supports a timeout mechanism.
+ * 
+ * \param pt_p (struct pt *) A pointer to the protothread (struct pt) in
+ * which the operation is executed.
+ * 
+ * \param s (struct pt_sem *) A pointer to the pt_sem struct
+ * representing the semaphore
+ * 
+ * \param ms (clock_time_t) A number representing the timeout
+ * 
+ * \param ret (int *) A pointer to the integer used to save the return value.
+ * Obtained semaphore successfully if the return value is equal to 0
+ * 
+ * Example usage:
+ * @code{c}
+ *  PT_THREAD(test_task_A(struct pt *pt)){
+ *      PT_BEGIN(pt);
+ *      static int i;
+ *      for(i = 0; i < 10; i++){
+ *          PT_TASK_DELAY(pt, 1000);
+ *          PT_SEM_SIGNAL(pt, &sem);
+ *      }
+ *      PT_END(pt);
+ *  }
+ *  
+ *  PT_THREAD(test_task_B(struct pt *pt)){
+ *      PT_BEGIN(pt);
+ *      static int err_cnt = 0;
+ *      while(1){
+ *          int ret; // this veriable allow be non-static
+ *          PT_SEM_WAIT_TIMEOUT(pt, &sem, 2000, &ret);
+ *          if(ret == 0){
+ *              printf("Obtained semaphore! - %d\r\n", clock_time());
+ *          }else{
+ *              printf("Obtained semaphore timeout - %d\r\n", clock_time());
+ *              err_cnt++;
+ *              if(err_cnt >= 3){
+ *                  PT_EXIT(pt);
+ *              }
+ *          }
+ *      }
+ *      PT_END(pt);
+ *  }
+ * @endcode{c}
+ * 
+ * \hideinitializer
+ */
+#define PT_SEM_WAIT_TIMEOUT(pt_p, s, ms, ret)                              \
+    do                                                                     \
+    {                                                                      \
+        timer_set(&(containerof(pt_p, pt_item_t, pt)->periodic), ms);      \
+        PT_WAIT_UNTIL(pt_p, ((s)->count > 0) ||                            \
+            timer_expired(&(containerof(pt_p, pt_item_t, pt)->periodic))); \
+        if ((s)->count > 0)                                                \
+        {                                                                  \
+            (s)->count--;                                                  \
+            *(ret) = 0;                                                    \
+        }                                                                  \
+        else                                                               \
+        {                                                                  \
+            *(ret) = 1;                                                    \
+        }                                                                  \
+    } while (0)
 #endif

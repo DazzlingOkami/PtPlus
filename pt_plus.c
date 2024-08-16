@@ -45,12 +45,18 @@ void pt_task_schedule(void)
                 break;
             }
         }
+        /* 
+         * All coroutines need to return to PTVNet state before scheduling
+         * can be ended. This is to enable timed processing of related 
+         * transactions between coroutines, such as semaphore mechanisms, 
+         * coroutine creation, etc.
+         */
     } while (pt_state != PT_WAITING);
 }
 
 #if defined(PT_PLUS_DELAY_SUPPORT) && (PT_PLUS_DELAY_SUPPORT == 1)
 clock_time_t pt_task_idle_time(void){
-    clock_time_t min_idle_time = 100;
+    clock_time_t min_idle_time = 1000;
     clock_time_t idle_time;
     pt_item_t *pt_item;
     list_for_each_entry(&pt_pool, pt_item, pt_item_t, list)

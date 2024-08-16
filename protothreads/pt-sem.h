@@ -219,7 +219,11 @@ struct pt_sem {
  *
  * \hideinitializer
  */
-#define PT_SEM_SIGNAL(pt, s) ++(s)->count
+#define PT_SEM_SIGNAL(pt, s) \
+  do {                       \
+    ++(s)->count;            \
+    PT_YIELD(pt);            \
+  } while (0)
 
 #endif /* __PT_SEM_H__ */
 
