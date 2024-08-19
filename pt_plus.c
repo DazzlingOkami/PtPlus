@@ -31,15 +31,17 @@ LIST_HEAD(pt_pool);
 
 void pt_task_schedule(void)
 {
-    int pt_state;
+    int overall_state;
+    int state;
     do
     {
         pt_item_t *pt_item;
-        pt_state = 0;
+        overall_state = 0;
         list_for_each_entry(&pt_pool, pt_item, pt_item_t, list)
         {
-            pt_state += pt_item->task(&(pt_item->pt));
-            if (pt_state >= PT_EXITED)
+            state = pt_item->task(&(pt_item->pt));
+            overall_state |= state;
+            if (state >= PT_EXITED)
             {
                 list_delete(&(pt_item->list));
                 break;
@@ -51,14 +53,15 @@ void pt_task_schedule(void)
          * transactions between coroutines, such as semaphore mechanisms, 
          * coroutine creation, etc.
          */
-    } while (pt_state != PT_WAITING);
+    } while (overall_state != PT_WAITING);
 }
 
 #if defined(PT_PLUS_DELAY_SUPPORT) && (PT_PLUS_DELAY_SUPPORT == 1)
 clock_time_t pt_task_idle_time(void){
-    clock_time_t min_idle_time = 1000;
+    clock_time_t min_idle_time;
     clock_time_t idle_time;
     pt_item_t *pt_item;
+    min_idle_time = 1000;
     list_for_each_entry(&pt_pool, pt_item, pt_item_t, list)
     {
         idle_time = timer_remaining(&(pt_item->periodic));
