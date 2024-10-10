@@ -2,7 +2,10 @@
 #include "pt_plus.h"
 #ifdef _WIN32
 #include <windows.h>
-#define sleep(ms) Sleep(ms)
+#define sleep_ms(ms) Sleep(ms)
+#else
+#include <unistd.h>
+#define sleep_ms(ms) usleep(ms * 1000)
 #endif
 
 #if defined(TEST) && (TEST == 1)
@@ -49,7 +52,7 @@ int main(void){
         if(idle_time > 0){
             // Calling system delay functions
             // printf("idle time - %d\r\n", idle_time);
-            sleep(idle_time);
+            sleep_ms(idle_time);
         }
     }
     return 0;

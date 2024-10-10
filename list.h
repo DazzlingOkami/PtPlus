@@ -11,7 +11,7 @@
 #endif
 
 #undef offsetof
-#define offsetof(s, m)   (int) &(((s *) 0)->m)
+#define offsetof(s, m)   (unsigned long)&(((s *) 0)->m)
 
 #define containerof(ptr, type, member) \
     ((type *)((unsigned long)(ptr) - offsetof(type, member)))
@@ -61,11 +61,11 @@ static inline struct list_node *list_next(struct list_node *list, struct list_no
         return (struct list_node *)0;
 }
 
-// iterates over the list, node should be struct list_node*
+/* iterates over the list, node should be struct list_node* */
 #define list_for_every(list, node) \
     for(node = (list)->next; node != (list); node = node->next)
 
-// iterates over the list, entry should be the container structure type *
+/* iterates over the list, entry should be the container structure type* */
 #define list_for_each_entry(list, entry, type, member) \
     for((entry) = containerof((list)->next, type, member);\
         &(entry)->member != (list);\
@@ -80,7 +80,8 @@ static inline size_t list_length(struct list_node *list)
 {
     size_t cnt = 0;
     struct list_node *node = list;
-    list_for_every(list, node) {
+    list_for_every(list, node)
+    {
         cnt++;
     }
 

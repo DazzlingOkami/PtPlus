@@ -39,8 +39,12 @@
  */
 
 #include "clock-arch.h"
+#include <limits.h>
+#ifdef _WIN32
 #include <time.h>
-
+#else
+#include <sys/time.h>
+#endif
 /*---------------------------------------------------------------------------*/
 clock_time_t
 clock_time(void)
@@ -56,6 +60,12 @@ clock_time(void)
    * return tv.tv_sec * 1000 + tv.tv_usec / 1000;
    * @endcode
    */
+#ifdef _WIN32
   return clock() / (CLOCKS_PER_SEC / CLOCK_CONF_SECOND);
+#else
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (int)((tv.tv_sec * 1000 + tv.tv_usec / 1000) % INT_MAX);
+#endif
 }
 /*---------------------------------------------------------------------------*/
